@@ -30,7 +30,6 @@ Comparer.prototype.one_on_one = function(person, positions, topics){
         _.extend(comparison[topic.slug], 
             this.calculator.determine_match(person_taken_positions.position, positions[topic.slug].position))
     }, this)
-    console.log(comparison )
     return comparison
 
 }
