@@ -1,0 +1,29 @@
+{
+  "name": "candidator-js",
+  "version": "0.0.0",
+  "authors": [
+    "Felipe Álvarez <falvarez@votainteligente.cl>"
+  ],
+  "description": "Javascript version of candidator",
+  "main": "candidator.js",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "votainteligente",
+    "ciudadano",
+    "inteligente",
+    "candidate",
+    "elections",
+    "democracy"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/lfalvarez/candidator-js",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
