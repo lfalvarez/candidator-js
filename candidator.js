@@ -10,6 +10,39 @@ CandidatorCalculator.prototype.determine_match = function(person_position, exter
 
 }
 
+function InformationHolder(adapter){
+    this.adapter = adapter;
+}
+InformationHolder.prototype.positions = {};
+InformationHolder.prototype.persons = [];
+InformationHolder.prototype.topics = [];
+InformationHolder.prototype.categories = [];
+InformationHolder.prototype.add_position = function(position){
+    this.positions[position.topic.slug] = position
+}
+InformationHolder.prototype.add_person = function(person){
+    this.persons.push(person)
+}
+InformationHolder.prototype.add_topic = function(topic){
+    this.topics.push(topic)
+}
+InformationHolder.prototype.add_category = function(category){
+    this.categories.push(category)
+    var topics = this.adapter.get_topics_per_category(category)
+    _.each(topics, function(topic, index, list){
+        this.topics.push(topic)
+    }, this)
+}
+InformationHolder.prototype.positions_by = function(category){
+    var result = {};
+
+    var filtered = _.filter(this.positions, function(position){ return position.topic.category==category; }, this)
+    _.each(filtered, function(position, index, list){
+        result[position.topic.slug] = position;
+    })
+    return result
+}
+
 function Comparer(options){
     var adapter_class = options.adapter_class || undefined;
     var calculator_class = options.calculator_class || CandidatorCalculator;
@@ -34,3 +67,4 @@ Comparer.prototype.one_on_one = function(person, positions, topics){
 
 }
 Comparer.prototype.topics = null;
+
