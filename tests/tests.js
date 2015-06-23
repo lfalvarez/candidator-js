@@ -137,3 +137,118 @@ QUnit.test('split positions in categories', function(assert){
     assert.equal(positions_by_others[religion_topic.slug], religion_position)
     assert.equal(positions_by_others[gay_marriage_topic.slug], gay_marriage_position)
 })
+QUnit.test('compare_categories_with_information_holder', function(assert){
+    marihuana_topic.category = herbs_category
+    chamomile_topic.category = herbs_category
+    religion_topic.category = others_category
+    gay_marriage_topic.category = others_category
+    var information_holder = new InformationHolder(new TestAdapter())
+    var marihuana_position = {
+        topic: marihuana_topic,
+        position: marihuana_no
+    }
+    var religion_position = {
+        topic: religion_topic,
+        position: religion_no
+    }
+    var chamomile_position = {
+        topic: chamomile_topic,
+        position: chamomile_no
+        }
+    var gay_marriage_position = {
+        topic: gay_marriage_topic,
+        position: gay_marriage_yes
+        }
+    information_holder.add_position(marihuana_position)
+    information_holder.add_position(religion_position)
+    information_holder.add_position(chamomile_position)
+    information_holder.add_position(gay_marriage_position)
+    information_holder.add_person(person1)
+    information_holder.add_person(person2)
+    information_holder.add_person(person3)
+    information_holder.add_category(herbs_category)
+    information_holder.add_category(others_category)
+    var comparer = new Comparer({'adapter_class': TestAdapter});
+    result = comparer.compare(information_holder)
+    expected_result = [{"person": person3,
+                            "explanation": {
+                                "herbs": {
+
+                                    "marihuana": {
+                                        "topic": marihuana_topic,
+                                        "match": true
+                                    },
+                                    "chamomile": {
+                                        "topic": chamomile_topic,
+                                        "match": true
+                                    },
+                                },
+                                "others": {
+                                    "religion": {
+                                        "topic": religion_topic,
+                                        "match": true
+                                    },
+                                    "gay_marriage": {
+                                        "topic": gay_marriage_topic,
+                                        "match": true
+                                    }
+                                }
+                            },
+                            "percentage": 1.0
+                            },
+                           {"person": person2,
+                            "explanation": {
+                                "herbs": {
+
+                                    "marihuana": {
+                                        "topic": marihuana_topic,
+                                        "match": true
+                                    },
+                                    "chamomile": {
+                                        "topic": chamomile_topic,
+                                        "match": true
+                                    },
+                                },
+                                "others": {
+                                    "religion": {
+                                        "topic": religion_topic,
+                                        "match": false
+                                    },
+                                    "gay_marriage": {
+                                        "topic": gay_marriage_topic,
+                                        "match": true
+                                    }
+                                }
+                            },
+                            "percentage": 0.75
+                            },
+                           {"person": person1,
+                            "explanation": {
+                                "herbs": {
+
+                                    "marihuana": {
+                                        "topic": marihuana_topic,
+                                        "match": false
+                                    },
+                                    "chamomile": {
+                                        "topic": chamomile_topic,
+                                        "match": false
+                                    },
+                                },
+                                "others": {
+
+                                    "religion": {
+                                        "topic": religion_topic,
+                                        "match": true
+                                    },
+                                    "gay_marriage": {
+                                        "topic": gay_marriage_topic,
+                                        "match": true
+                                    }
+                                }
+                            },
+                            "percentage": 0.5
+                            }]
+        
+        assert.ok(_.isEqual(result, expected_result));
+})

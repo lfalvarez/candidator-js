@@ -1,5 +1,5 @@
 function CandidatorCalculator(){
-
+    this.final_results_key = 'percentage'
 }
 CandidatorCalculator.prototype.determine_match = function(person_position, external_position){
     var match = false;
@@ -8,6 +8,26 @@ CandidatorCalculator.prototype.determine_match = function(person_position, exter
     }
     return {'match': match};
 
+}
+
+CandidatorCalculator.prototype.determine_points_per_person_per_category = function(explanation){
+    var points =  0;
+    _.each(explanation, function(topic, index, list){
+        if(topic.match){
+            points++;
+        }
+    }, this)
+    return points;
+}
+
+CandidatorCalculator.prototype.determine_total_result_per_person = function(points_per_person, total_comparisons){
+    var percentage = 0
+    if (total_comparisons){
+        percentage = points_per_person / total_comparisons
+    }
+    var result = {}
+    result[this.final_results_key] = percentage
+    return result
 }
 
 function InformationHolder(adapter){
@@ -65,6 +85,34 @@ Comparer.prototype.one_on_one = function(person, positions, topics){
     }, this)
     return comparison
 
+}
+Comparer.prototype.compare = function(information_holder){
+    return this.compare_information_holder(information_holder);
+}
+Comparer.prototype.compare_information_holder = function(information_holder){
+
+    var result = {}
+    var persons = information_holder.persons;
+    var categories = information_holder.categories;
+    _.each(persons, function(person, index, list){
+        var points_per_person = 0
+        var comparisons_per_category = 0
+        var explanations_per_person = {}
+        _.each(categories, function(category, index, list){
+            var positions = information_holder.positions_by(category)
+            var explanation = this.one_on_one(person, positions, this.adapter.get_topics_per_category(category))
+            explanations_per_person[category.slug] = explanation
+            points_per_person += this.calculator.determine_points_per_person_per_category(explanation)
+            comparisons_per_category += _.keys(explanation).length;
+
+        }, this)
+
+        result[person.id] = {"person": person,
+                             "explanation": explanations_per_person};
+        _.extend(result[person.id], this.calculator.determine_total_result_per_person(points_per_person, comparisons_per_category))
+    }, this)
+    return _.sortBy(result, function(person){ return -person.percentage; }, this);
+    
 }
 Comparer.prototype.topics = null;
 
