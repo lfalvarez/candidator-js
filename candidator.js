@@ -1,3 +1,57 @@
+function slugify(text)
+{
+  return text.toString().toLowerCase()
+    .replace(/\s+/g, '-')           // Replace spaces with -
+    .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+    .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+    .replace(/^-+/, '')             // Trim - from start of text
+    .replace(/-+$/, '');            // Trim - from end of text
+}
+
+function JSONAdapter(json){
+    this.json = json;
+    this.categories = [];
+    this.topics = [];
+    this.candidates = [];
+    this.positions = [];
+    _.each(json.categories, function(category, index, list){
+        _.each(category.questions, function(topic, index, list){
+            _.each(topic.answers, function(answer, index, list){
+                this.positions.push({
+                    answer_value: answer.answer_value, 
+                    answer_text: answer.answer_text, 
+                    label: answer.answer_text, 
+                    answer_id: answer.answer_id, 
+                    id: answer.answer_id, 
+                })
+            }, this)
+            this.topics.push({
+                question_text: topic.question_text,
+                label: topic.question_text,
+                slug: slugify(topic.question_text),
+                question_id: topic.question_id,
+                id: topic.question_id,
+            })
+        }, this);
+
+        this.categories.push({
+            category_id: category.category_id,
+            id: category.category_id,
+            name: category.name,
+            slug: slugify(category.name)
+        })
+    }, this)
+    _.each(json.candidates, function(candidate, index, list){
+        this.candidates.push({
+            candidate_name: candidate.candidate_name,
+            name: candidate.candidate_name,
+            candidate_id: candidate.candidate_id,
+            id: candidate.candidate_id
+        })
+    }, this)
+}
+
+
 function CandidatorCalculator(){
     this.final_results_key = 'percentage'
 }
