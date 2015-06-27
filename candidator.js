@@ -13,34 +13,39 @@ function JSONAdapter(json){
     this.categories = [];
     this.topics = [];
     this.candidates = [];
+    this.persons = this.candidates;
     this.positions = [];
     this.taken_positions = [];
     _.each(json.categories, function(category, index, list){
+        var current_category = {
+            category_id: category.category_id,
+            id: category.category_id,
+            name: category.name,
+            slug: slugify(category.name)
+        }
         _.each(category.questions, function(topic, index, list){
+            var current_topic = {
+                question_text: topic.question_text,
+                label: topic.question_text,
+                slug: slugify(topic.question_text),
+                question_id: topic.question_id,
+                category: current_category,
+                id: topic.question_id,
+            };
             _.each(topic.answers, function(answer, index, list){
                 this.positions.push({
                     answer_value: answer.answer_value, 
                     answer_text: answer.answer_text, 
                     label: answer.answer_text, 
-                    answer_id: answer.answer_id, 
+                    answer_id: answer.answer_id,
+                    topic: current_topic,
                     id: answer.answer_id, 
                 })
             }, this)
-            this.topics.push({
-                question_text: topic.question_text,
-                label: topic.question_text,
-                slug: slugify(topic.question_text),
-                question_id: topic.question_id,
-                id: topic.question_id,
-            })
+            this.topics.push(current_topic)
         }, this);
 
-        this.categories.push({
-            category_id: category.category_id,
-            id: category.category_id,
-            name: category.name,
-            slug: slugify(category.name)
-        })
+        this.categories.push(current_category)
     }, this)
     _.each(json.candidates, function(candidate, index, list){
         var person = {
@@ -51,14 +56,10 @@ function JSONAdapter(json){
         }
         this.candidates.push(person)
         _.each(candidate.positions, function(taken_position, index, list){
-            this.taken_positions.push({
-                "answer_id": taken_position.answer_id,
-                "position": this.getPositionById(taken_position.answer_id),
-                "question_id": taken_position.question_id,
-                "topic": this.getTopicByID(taken_position.question_id),
-                "candidate_id": candidate.candidate_id,
-                "person": person
-            })
+            var the_position = this.build_position_from_object(taken_position)
+            the_position.candidate_id = candidate.candidate_id
+            the_position.person = person
+            this.taken_positions.push(the_position)
         }, this);
 
     }, this)
@@ -79,12 +80,32 @@ JSONAdapter.prototype.getTopicByID = function(id){
 JSONAdapter.prototype.getPositionById = function(id){
     return this.getById(this.positions, id);      
 }
+JSONAdapter.prototype.get_taken_position_by = function(person, topic){
+    return _.find(this.taken_positions, function(taken_position){return (taken_position.person==person)&&(taken_position.topic==topic);});
+}
+JSONAdapter.prototype.get_topics_per_category = function(category){
+    return _.filter(this.topics, function(topic){ return this.is_topic_category_the_same_as(topic, category);}, this)
+}
+JSONAdapter.prototype.is_topic_category_the_same_as = function(topic, category){
+    return topic.category.category_id == category.category_id
+}
+JSONAdapter.prototype.build_position_from_object = function(position){
+    var the_position = {
+        "answer_id": position.answer_id,
+        "position": this.getPositionById(position.answer_id),
+        "question_id": position.question_id,
+        "topic": this.getTopicByID(position.question_id),
+    }
+    
+    return the_position;
+}
 
 function CandidatorCalculator(){
     this.final_results_key = 'percentage'
 }
 CandidatorCalculator.prototype.determine_match = function(person_position, external_position){
     var match = false;
+
     if(person_position==external_position){
         match = true;
     }
@@ -114,12 +135,23 @@ CandidatorCalculator.prototype.determine_total_result_per_person = function(poin
 
 function InformationHolder(adapter){
     this.adapter = adapter;
+    if(adapter){
+        this.positions = this.adapter.positions || {};
+        this.persons = this.adapter.persons || [];
+        this.topics = this.adapter.topics || [];
+        this.categories = this.adapter.categories || [];
+    }
+    else{
+        this.positions = {};
+        this.persons = [];
+        this.topics = [];
+        this.categories = [];
+    }
 }
-InformationHolder.prototype.positions = {};
-InformationHolder.prototype.persons = [];
-InformationHolder.prototype.topics = [];
-InformationHolder.prototype.categories = [];
 InformationHolder.prototype.add_position = function(position){
+    if (position.topic != undefined && position.topic.slug == undefined && position.topic.question_text != undefined){
+        position.topic.slug = slugify(position.topic.question_text)
+    }
     this.positions[position.topic.slug] = position
 }
 InformationHolder.prototype.add_person = function(person){
@@ -146,10 +178,15 @@ InformationHolder.prototype.positions_by = function(category){
 }
 
 function Comparer(options){
-    var adapter_class = options.adapter_class || undefined;
+    if (options.information_holder){
+        this.adapter = options.information_holder.adapter;
+    }
+    else {
+        var adapter_class = options.adapter_class || undefined;
+        this.adapter = new adapter_class();
+    }
     var calculator_class = options.calculator_class || CandidatorCalculator;
     this.calculator = new calculator_class();
-    this.adapter = new adapter_class();
 }
 
 Comparer.prototype.one_on_one = function(person, positions, topics){
@@ -162,8 +199,10 @@ Comparer.prototype.one_on_one = function(person, positions, topics){
         comparison[topic.slug] = {
             "topic": topic
         }
+        var external_position = positions[topic.slug].position || positions[topic.slug]
+
         _.extend(comparison[topic.slug], 
-            this.calculator.determine_match(person_taken_positions.position, positions[topic.slug].position))
+            this.calculator.determine_match(person_taken_positions.position, external_position))
     }, this)
     return comparison
 
