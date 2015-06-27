@@ -14,6 +14,7 @@ function JSONAdapter(json){
     this.topics = [];
     this.candidates = [];
     this.positions = [];
+    this.taken_positions = [];
     _.each(json.categories, function(category, index, list){
         _.each(category.questions, function(topic, index, list){
             _.each(topic.answers, function(answer, index, list){
@@ -42,15 +43,42 @@ function JSONAdapter(json){
         })
     }, this)
     _.each(json.candidates, function(candidate, index, list){
-        this.candidates.push({
+        var person = {
             candidate_name: candidate.candidate_name,
             name: candidate.candidate_name,
             candidate_id: candidate.candidate_id,
             id: candidate.candidate_id
-        })
+        }
+        this.candidates.push(person)
+        _.each(candidate.positions, function(taken_position, index, list){
+            this.taken_positions.push({
+                "answer_id": taken_position.answer_id,
+                "position": this.getPositionById(taken_position.answer_id),
+                "question_id": taken_position.question_id,
+                "topic": this.getTopicByID(taken_position.question_id),
+                "candidate_id": candidate.candidate_id,
+                "person": person
+            })
+        }, this);
+
     }, this)
 }
 
+JSONAdapter.prototype.getById= function(collection, id) {
+    return _.find(collection, function(element){return (element.id==id);});
+}
+JSONAdapter.prototype.getCategoryByID = function(id){
+    return this.getById(this.categories, id);
+}
+JSONAdapter.prototype.getCandidateByID = function(id){
+    return this.getById(this.candidates, id);
+}
+JSONAdapter.prototype.getTopicByID = function(id){
+    return this.getById(this.topics, id);   
+}
+JSONAdapter.prototype.getPositionById = function(id){
+    return this.getById(this.positions, id);      
+}
 
 function CandidatorCalculator(){
     this.final_results_key = 'percentage'

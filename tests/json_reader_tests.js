@@ -69,7 +69,9 @@ QUnit.test('read the json elements', function(assert){
     var expected_positions = [{
                                 "answer_value": -2,
                                 "answer_text": "Sí",
-                                "answer_id": 1
+                                "label": "Sí",
+                                "answer_id": 1,
+                                "id": 1
                                 },
                                 {
                                 "answer_value": -1,
@@ -177,7 +179,6 @@ QUnit.test('read the json elements', function(assert){
                                 "id": 16
                                 }]
 
-
     for (i = 0; i < expected_positions.length; i++) {
         assert.equal(expected_positions[i].answer_value, adapter.positions[i].answer_value);
         assert.equal(expected_positions[i].answer_text, adapter.positions[i].answer_text);
@@ -190,53 +191,139 @@ QUnit.test('read the json elements', function(assert){
         assert.equal(expected_positions[i].id, adapter.positions[i].id);
 
     }
+    for (i = 0; i < expected_candidates.length; i++) {
+        assert.equal(expected_candidates[i].candidate_name, adapter.candidates[i].candidate_name)
+        assert.equal(expected_candidates[i].name, adapter.candidates[i].name)
+        assert.equal(expected_candidates[i].candidate_id, adapter.candidates[i].candidate_id)
+        assert.equal(expected_candidates[i].id, adapter.candidates[i].id)
+        
+    }
+
+    for (i = 0; i < expected_topics.length; i++) {
+        assert.equal(expected_topics[i].question_text, adapter.topics[i].question_text)
+        assert.equal(expected_topics[i].label, adapter.topics[i].label)
+        assert.equal(expected_topics[i].slug, adapter.topics[i].slug)
+        assert.equal(expected_topics[i].question_id, adapter.topics[i].question_id)
+        assert.equal(expected_topics[i].id, adapter.topics[i].id)
+    }
+
+})
+QUnit.test('Adapter get by id', function(assert){
+    var adapter = new JSONAdapter(fixtures2);
+    assert.equal(adapter.getCandidateByID('margarita-stolbizer').name, "Margarita Stolbizer")
+    assert.equal(adapter.getCategoryByID(1).name, "Preguntas presidente")
+    assert.equal(adapter.getTopicByID(2).label, "¿Creés que se deben instalar más cámaras de seguridad en la vía pública?")
+    assert.equal(adapter.getPositionById(10).label, "Sí, pero también hay que mejorar las cárceles y con re-educación del delincuente")
+})
+
+QUnit.test('Get the taken positions right', function(assert){
     
+    var taken_positions = [
+                {
+                "answer_id": 3,
+                "question_id": 1,
+                "candidate_id": "daniel-scioli"
+                },
+                {
+                "answer_id": 5,
+                "question_id": 2,
+                "candidate_id": "daniel-scioli"
+                },
+                {
+                "answer_id": 11,
+                "question_id": 3,
+                "candidate_id": "daniel-scioli"
+                },
+                {
+                "answer_id": 15,
+                "question_id": 4,
+                "candidate_id": "daniel-scioli"
+                }
+                ,
+                {
+                "answer_id": 2,
+                "question_id": 1,
+                "candidate_id": "margarita-stolbizer"
+                },
+                {
+                "answer_id": 7,
+                "question_id": 2,
+                "candidate_id": "margarita-stolbizer"
+                },
+                {
+                "answer_id": 12,
+                "question_id": 3,
+                "candidate_id": "margarita-stolbizer"
+                },
+                {
+                "answer_id": 15,
+                "question_id": 4,
+                "candidate_id": "margarita-stolbizer"
+                },
+                {
+                "answer_id": 2,
+                "question_id": 1,
+                "candidate_id": "mauricio-macri"
+                },
+                {
+                "answer_id": 6,
+                "question_id": 2,
+                "candidate_id": "mauricio-macri"
+                },
+                {
+                "answer_id": 10,
+                "question_id": 3,
+                "candidate_id": "mauricio-macri"
+                },
+                {
+                "answer_id": 13,
+                "question_id": 4,
+                "candidate_id": "mauricio-macri"
+                },
+                {
+                "answer_id": 2,
+                "question_id": 1,
+                "candidate_id": "sergio-massa"
+                },
+                {
+                "answer_id": 6,
+                "question_id": 2,
+                "candidate_id": "sergio-massa"
+                },
+                {
+                "answer_id": 10,
+                "question_id": 3,
+                "candidate_id": "sergio-massa"
+                },
+                {
+                "answer_id": 14,
+                "question_id": 4,
+                "candidate_id": "sergio-massa"
+                }
+                ]
+    var expected_taken_positions = []
+    var adapter = new JSONAdapter(fixtures2);
+    _.each(taken_positions, function(taken_position, index, list){
+        var answer = adapter.getPositionById(taken_position.answer_id)
+        var topic = adapter.getTopicByID(taken_position.question_id)
+        var person = adapter.getCandidateByID(taken_position.candidate_id)
+        expected_taken_positions.push({
+            "answer_id": taken_position.answer_id,
+            'position': answer,
+            "question_id": taken_position.question_id,
+            "topic": topic,
+            "candidate_id": taken_position.candidate_id,
+            "person": person
+        })
+    }, this)
+    for (i = 0; i < expected_taken_positions.length; i++) {
+        assert.equal(expected_taken_positions[i].answer_id, adapter.taken_positions[i].answer_id)
+        assert.equal(expected_taken_positions[i].position, adapter.taken_positions[i].position)
+        assert.equal(expected_taken_positions[i].question_id, adapter.taken_positions[i].question_id)
+        assert.equal(expected_taken_positions[i].topic, adapter.taken_positions[i].topic)
+        assert.equal(expected_taken_positions[i].candidate_id, adapter.taken_positions[i].candidate_id)
+        assert.equal(expected_taken_positions[i].person, adapter.taken_positions[i].person)
+        
+    }
 
-
-    assert.equal(expected_candidates[0].candidate_name, adapter.candidates[0].candidate_name)
-    assert.equal(expected_candidates[0].name, adapter.candidates[0].name)
-    assert.equal(expected_candidates[0].candidate_id, adapter.candidates[0].candidate_id)
-    assert.equal(expected_candidates[0].id, adapter.candidates[0].id)
-
-
-    assert.equal(expected_candidates[1].candidate_name, adapter.candidates[1].candidate_name)
-    assert.equal(expected_candidates[1].name, adapter.candidates[1].name)
-    assert.equal(expected_candidates[1].candidate_id, adapter.candidates[1].candidate_id)
-    assert.equal(expected_candidates[1].id, adapter.candidates[1].id)
-
-
-    assert.equal(expected_candidates[2].candidate_name, adapter.candidates[2].candidate_name)
-    assert.equal(expected_candidates[2].name, adapter.candidates[2].name)
-    assert.equal(expected_candidates[2].candidate_id, adapter.candidates[2].candidate_id)
-    assert.equal(expected_candidates[2].id, adapter.candidates[2].id)
-
-    assert.equal(expected_candidates[3].candidate_name, adapter.candidates[3].candidate_name)
-    assert.equal(expected_candidates[3].name, adapter.candidates[3].name)
-    assert.equal(expected_candidates[3].candidate_id, adapter.candidates[3].candidate_id)
-    assert.equal(expected_candidates[3].id, adapter.candidates[3].id)
-
-
-    assert.equal(expected_topics[0].question_text, adapter.topics[0].question_text)
-    assert.equal(expected_topics[0].label, adapter.topics[0].label)
-    assert.equal(expected_topics[0].slug, adapter.topics[0].slug)
-    assert.equal(expected_topics[0].question_id, adapter.topics[0].question_id)
-    assert.equal(expected_topics[0].id, adapter.topics[0].id)
-
-    assert.equal(expected_topics[1].question_text, adapter.topics[1].question_text)
-    assert.equal(expected_topics[1].label, adapter.topics[1].label)
-    assert.equal(expected_topics[1].slug, adapter.topics[1].slug)
-    assert.equal(expected_topics[1].question_id, adapter.topics[1].question_id)
-    assert.equal(expected_topics[1].id, adapter.topics[1].id)
-
-    assert.equal(expected_topics[2].question_text, adapter.topics[2].question_text)
-    assert.equal(expected_topics[2].label, adapter.topics[2].label)
-    assert.equal(expected_topics[2].slug, adapter.topics[2].slug)
-    assert.equal(expected_topics[2].question_id, adapter.topics[2].question_id)
-    assert.equal(expected_topics[2].id, adapter.topics[2].id)
-
-    assert.equal(expected_topics[3].question_text, adapter.topics[3].question_text)
-    assert.equal(expected_topics[3].label, adapter.topics[3].label)
-    assert.equal(expected_topics[3].slug, adapter.topics[3].slug)
-    assert.equal(expected_topics[3].question_id, adapter.topics[3].question_id)
-    assert.equal(expected_topics[3].id, adapter.topics[3].id)
 })
